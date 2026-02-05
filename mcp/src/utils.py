@@ -135,7 +135,8 @@ def calculate_pdb_center(pdb_content: str) -> Dict[str, float]:
     for line in pdb_content.split('\n'):
         if line.startswith('ATOM') or line.startswith('HETATM'):
             try:
-                # PDB format: columns 31-38 (x), 39-46 (y), 47-54 (z)
+                # PDB format: columns 31-38 (x), 39-46 (y), 47-54 (z) (1-indexed)
+                # Python string indices: [30:38], [38:46], [46:54] (0-indexed)
                 x = float(line[30:38].strip())
                 y = float(line[38:46].strip())
                 z = float(line[46:54].strip())

@@ -2,7 +2,6 @@
 Gradio UI for Molecular Docking with MCP integration.
 """
 import gradio as gr
-import asyncio
 from utils import fetch_pdb, smiles_to_pdbqt, calculate_pdb_center
 import subprocess
 import tempfile
