@@ -10,6 +10,7 @@ import tempfile
 import os
 import subprocess
 from pathlib import Path
+from utils import fetch_pdb, smiles_to_pdbqt, calculate_pdb_center
 
 class SminaDockingServer(MCPServer):
     def __init__(self, config: Optional[ServerConfig] = None):
@@ -122,6 +123,83 @@ class SminaDockingServer(MCPServer):
         except Exception as e:
             return Response(
                 error=f"Error during docking: {str(e)}"
+            )
+
+    @register_function("fetch_pdb")
+    async def fetch_pdb_structure(self, request: Request) -> Response:
+        """
+        Fetch a PDB structure from the RCSB PDB database.
+        
+        Args:
+            request.inputs:
+                pdb_id: str - 4-character PDB identifier (e.g., '1HSG')
+        
+        Returns:
+            dict containing:
+                pdb_content: str - Content of the PDB file
+                pdb_id: str - The PDB ID that was fetched
+                center: dict - Geometric center coordinates (x, y, z)
+        """
+        inputs = request.inputs
+        
+        if 'pdb_id' not in inputs:
+            return Response(
+                error="Missing required input: pdb_id"
+            )
+        
+        try:
+            pdb_content = fetch_pdb(inputs['pdb_id'])
+            center = calculate_pdb_center(pdb_content)
+            
+            return Response(
+                outputs={
+                    'pdb_content': pdb_content,
+                    'pdb_id': inputs['pdb_id'].upper(),
+                    'center': center
+                }
+            )
+        except Exception as e:
+            return Response(
+                error=f"Error fetching PDB: {str(e)}"
+            )
+
+    @register_function("smiles_to_pdbqt")
+    async def convert_smiles_to_pdbqt(self, request: Request) -> Response:
+        """
+        Convert a SMILES string to PDBQT format using OpenBabel.
+        
+        Args:
+            request.inputs:
+                smiles: str - SMILES string representation of the molecule
+                ligand_name: str - (optional) Name for the ligand (default: "ligand")
+        
+        Returns:
+            dict containing:
+                pdbqt_content: str - Content of the PDBQT file
+                smiles: str - The input SMILES string
+                ligand_name: str - Name of the ligand
+        """
+        inputs = request.inputs
+        
+        if 'smiles' not in inputs:
+            return Response(
+                error="Missing required input: smiles"
+            )
+        
+        try:
+            ligand_name = inputs.get('ligand_name', 'ligand')
+            pdbqt_content = smiles_to_pdbqt(inputs['smiles'], ligand_name)
+            
+            return Response(
+                outputs={
+                    'pdbqt_content': pdbqt_content,
+                    'smiles': inputs['smiles'],
+                    'ligand_name': ligand_name
+                }
+            )
+        except Exception as e:
+            return Response(
+                error=f"Error converting SMILES to PDBQT: {str(e)}"
             )
 
 if __name__ == "__main__":

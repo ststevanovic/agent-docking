@@ -1,5 +1,6 @@
 # Main dependencies
 model-context-protocol-sdk>=0.1.0
+requests>=2.28.0  # for HTTP requests (PDB fetching)
 
 # Molecular docking dependencies
 # The following packages should be installed via conda:
